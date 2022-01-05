@@ -15,10 +15,26 @@
 // int x = atomic_load(obiect_volatil) --ia valoarea dintr-o variabila atomica
 // atomic_store(obiect_volatil, dorit) --pune valoarea intr-o variabila atomica
 
+#define NR_THREADS 10
+
+typedef struct{
+    volatile atomic_flag* flag;  //flaguri de 'vreau acces' la zona critica
+    int* tichet; //al catelea thread e in coada
+}Mtx;
+
+
+Mtx* Mtx_init(int nr_thr){      //CONSTRUCTOR
+    Mtx* p = malloc(sizeof(Mtx));
+    p->flag = malloc(nr_thr*sizeof(volatile atomic_flag));
+    p->tichet = malloc(nr_thr*sizeof(int));
+    for (int i = 0; i < nr_thr; i++){
+        atomic_flag_clear(&p->flag[i]);
+        p->tichet[i] = 0;
+    }
+    return p;
+}
 
 int main(){
-    int* a = malloc(sizeof(int));
-    int* b = a;
-    *a = 5;
-    printf("%d",*a);
+    Mtx* m = Mtx_init(NR_THREADS);
+    return 0;
 }
