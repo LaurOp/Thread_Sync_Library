@@ -6,7 +6,7 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-#define mut_type volatile atomic_flag
+// #define mut_type volatile atomic_flag
 
 typedef struct{
     volatile atomic_flag mut;
