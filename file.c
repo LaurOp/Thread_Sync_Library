@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdatomic.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/syscall.h>
 
 // __sync_fetch_and_add(adresa, valoare)   --adunare atomica din stdlib
 // __sync_fetch_and_sub(adresa, valoare)    --scaderea atomica din stdlib
@@ -20,13 +23,14 @@
 typedef struct{
     volatile atomic_flag* flag;  //flaguri de 'vreau acces' la zona critica
     int* tichet; //al catelea thread e in coada
+    int thr_start;
 }Mtx;
-
 
 Mtx* Mtx_init(int nr_thr){      //CONSTRUCTOR
     Mtx* p = malloc(sizeof(Mtx));
     p->flag = malloc(nr_thr*sizeof(volatile atomic_flag));
     p->tichet = malloc(nr_thr*sizeof(int));
+    p->thr_start = syscall(__NR_gettid);
     for (int i = 0; i < nr_thr; i++){
         atomic_flag_clear(&p->flag[i]);
         p->tichet[i] = 0;
@@ -34,7 +38,17 @@ Mtx* Mtx_init(int nr_thr){      //CONSTRUCTOR
     return p;
 }
 
+void lock(Mtx* mt){    //MUTEX_LOCK
+    
+}
+
+void unlock(Mtx* mt){
+    mt->tichet[syscall(__NR_gettid) - mt->thr_start] = 0;
+}
+
 int main(){
     Mtx* m = Mtx_init(NR_THREADS);
+    lock(m);
+    unlock(m);
     return 0;
 }
