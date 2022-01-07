@@ -12,7 +12,6 @@ typedef struct{
     volatile atomic_flag mut;
     volatile int owner;
 } Mtx;
-Mtx mut;
 
 void mtx_init(Mtx* Mut){
     atomic_flag_clear(&Mut->mut);
@@ -21,20 +20,20 @@ void mtx_init(Mtx* Mut){
 
 void lock(Mtx* Mut){
     atomic_store(&Mut->owner, syscall(__NR_gettid));
-    while (atomic_flag_test_and_set(Mut));      //daca e fals, lasa-l sa treaca, altfel astepti unlock  
-    atomic_store(&Mut->owner, 0);
+    while (atomic_flag_test_and_set(&Mut->mut));      //daca e fals, lasa-l sa treaca, altfel astepti unlock  
 }   
 int unlock(Mtx* Mut) {
     atomic_flag_clear(Mut);
     return 0;
 }
 
+Mtx mut;
 void * abc(void * p) {
   char * msg = (char *) p;
   int i;
   for (i = 0; i<100; i++){
     lock(&mut);
-        for (size_t i = 0; i < strlen(msg); i++) {
+        for (size_t i = 0; i < strlen(msg); ++i) {
             printf("%c", msg[i]);
         }
         printf("\n");
@@ -46,6 +45,7 @@ void * abc(void * p) {
 
 int main() {
     mtx_init(&mut);
+
     pthread_t aa;
     pthread_t bb;
     pthread_t cc;
