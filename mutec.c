@@ -23,7 +23,7 @@ void lock(Mtx* Mut){
     while (atomic_flag_test_and_set(&Mut->mut));      //daca e fals, lasa-l sa treaca, altfel astepti unlock  
 }   
 int unlock(Mtx* Mut) {
-    atomic_flag_clear(Mut);
+    atomic_flag_clear(&Mut->mut);
     return 0;
 }
 
