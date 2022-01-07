@@ -34,7 +34,7 @@ void * abc(void * p) {
   int i;
   for (i = 0; i<100; i++){
     lock(&mut);
-        for (size_t i = 0; i < strlen(msg); ++i) {
+        for (size_t i = 0; i < strlen(msg); i++) {
             printf("%c", msg[i]);
         }
         printf("\n");
