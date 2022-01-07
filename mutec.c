@@ -6,25 +6,30 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-// #define mut_type volatile atomic_flag
-
 typedef struct{
-    volatile atomic_flag mut;
-    volatile int owner;
+    volatile _Atomic int owner;
 } Mtx;
 
 void mtx_init(Mtx* Mut){
-    atomic_flag_clear(&Mut->mut);
     Mut->owner = 0;
 }
 
 void lock(Mtx* Mut){
-    atomic_store(&Mut->owner, syscall(__NR_gettid));
-    while (atomic_flag_test_and_set(&Mut->mut));      //daca e fals, lasa-l sa treaca, altfel astepti unlock  
+    while (!__sync_bool_compare_and_swap(&Mut->owner, 0, syscall(__NR_gettid)));
 }   
+
 int unlock(Mtx* Mut) {
-    atomic_flag_clear(&Mut->mut);
+    if (Mut->owner == 0){
+        return -1;  //EROARE UNLOCK LA CEVA UNLOCKED
+    }
+    if (Mut->owner != syscall(__NR_gettid) ){
+        return -2;  //EROARE OWNERSHIP
+    }
+    atomic_store(&Mut->owner, 0);
     return 0;
+}
+
+void mtx_destroy(Mtx* Mut){
 }
 
 Mtx mut;
@@ -50,13 +55,14 @@ int main() {
     pthread_t bb;
     pthread_t cc;
 
-    pthread_create(&aa, NULL, abc, "AAA");
-    pthread_create(&bb, NULL, abc, "BBB");
-    pthread_create(&cc, NULL, abc, "CCC");
+    pthread_create(&aa, NULL, abc, "A");
+    pthread_create(&bb, NULL, abc, "B");
+    pthread_create(&cc, NULL, abc, "C");
 
     pthread_join(aa,NULL);
     pthread_join(bb,NULL);
     pthread_join(cc,NULL);
 
+    mtx_destroy(&mut);
     return 0;
-} // main
+}
