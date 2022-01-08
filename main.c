@@ -7,23 +7,24 @@
 #include <unistd.h>
 #include "sinc.h"
 
-Mtx mut;
+Spn mut;
+
 void * abc(void * p) {
   char * msg = (char *) p;
   for (int j = 0; j<100; j++){
-    lock(&mut);
+    spn_lock(&mut);
         for (size_t i = 0; i < strlen(msg); ++i) {
             printf("%c", msg[i]);
         }
         printf("%d\n",j);
-    if(unlock(&mut)){
+    if(spn_unlock(&mut)){
         printf("\neroare\n");
     }
   }
 }
 
 int main() {
-    mtx_init(&mut);
+    spn_init(&mut);
 
     pthread_t aa;
     pthread_t bb;
@@ -37,6 +38,6 @@ int main() {
     pthread_join(bb,NULL);
     pthread_join(cc,NULL);
 
-    mtx_destroy(&mut);
+    spn_destroy(&mut);
     return 0;
 }
