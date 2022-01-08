@@ -113,3 +113,42 @@ void rwl_destroy(Rwlock* rwl)
 //  ====================================================================================
 
 
+//                                   MUTEX - LAMPORT ALGORITHM, N Threads
+//  ===================================================================================
+
+void nmut_init(NMut* mut, int NrThreads){
+    mut->thr_start = syscall(__NR_gettid);
+    mut->ordin = malloc(NrThreads*sizeof(int));
+    mut->acum_alege = malloc(NrThreads*sizeof(int));
+    mut->nrThreads = NrThreads;
+}
+
+void nmut_lock(NMut* mut){
+    int actual = syscall(__NR_gettid) - mut->thr_start - 1; //ca sa numeroteze de la 0 in vector
+    mut->acum_alege[actual] = 1;     //acum isi cauta locul la coada
+
+    int mx = 0;
+    for (int i = 0;i < mut->nrThreads; i++) {
+        int nr = mut->ordin[i];   //il scoatem pt atomicitatea comparatiei ce urmeaza
+        if(nr > mx)
+            mx = nr;
+    }
+
+    mut->ordin[actual] = mx+1;     // practic il punem ultimul in coada
+    mut->acum_alege[actual] = 0;
+
+    for (int j = 0;j < mut->nrThreads; j++) {
+        while (mut->acum_alege[j]) {}    //asteapta sa-si gaseasca locul la coada
+        while (mut->ordin[j] != 0 && (mut->ordin[j] < mut->ordin[actual] || (mut->ordin[j] == mut->ordin[actual] && j < actual))){}
+    }
+}
+
+void nmut_unlock(NMut* mut){
+    mut->ordin[syscall(__NR_gettid)- mut->thr_start - 1] = 0;
+}
+  
+void nmut_destroy(NMut* mut){
+    free(mut->ordin);
+    free(mut->acum_alege);
+}
+  
