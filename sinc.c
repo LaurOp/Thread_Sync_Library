@@ -61,7 +61,8 @@ void sem_binar_destroy(Sem_binar* sb){
 //                                     RWLOCK
 //  ====================================================================================
 
-void rwl_init(Rwlock* rwl){
+void rwl_init(Rwlock* rwl)
+{
     rwl->counter = 0;
     sem_binar_init(&rwl->counter_lock);
     mtx_init(&rwl->write_lock);
@@ -93,6 +94,10 @@ void lock_for_writing(Rwlock* rwl)
 void unlock_for_writing(Rwlock* rwl)
 {   
     unlock(&rwl->write_lock);
+}
+
+void rwl_destroy(Rwlock* rwl)
+{
     sem_binar_destroy(&rwl->counter_lock);
     mtx_destroy(&rwl->write_lock);
 }
