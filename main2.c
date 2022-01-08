@@ -9,20 +9,20 @@
 
 int available_resources = MAX_RESOURCES;
 
-Mtx mutex;
+Spn mutex;
 
 int decrease_count(int count)
 {
     if (available_resources >= count){
         available_resources -= count;
         printf("got %d, %d remaining\n", count, available_resources);
-        if(unlock(&mutex)){
+        if(spn_unlock(&mutex)){
             perror("mutex_unlock");
         }
         return 0;
     }
     
-    if(unlock(&mutex)){
+    if(spn_unlock(&mutex)){
         perror("mutex_unlock");
     }
     return -1;
@@ -33,7 +33,7 @@ int increase_count(int count)
 {
     available_resources += count;
     printf("released %d, %d remaining\n", count, available_resources);
-    if(unlock(&mutex)){
+    if(spn_unlock(&mutex)){
         perror("mutex_unlock");
     }
     return 0;
@@ -42,12 +42,12 @@ int increase_count(int count)
 void* thread_routine(void *arg){
     int val = *(int*)arg;
 
-    lock(&mutex);
+    spn_lock(&mutex);
     while(decrease_count(val)){
-        lock(&mutex);
+        spn_lock(&mutex);
     }
 
-    lock(&mutex);
+    spn_lock(&mutex);
 
     increase_count(val);
 
@@ -58,7 +58,7 @@ int main(){
     pthread_t thread[500];
     int arg[500];
 
-    mtx_init(&mutex);
+    spn_init(&mutex);
 
     for(int i = 0; i < 500; i++){
         arg[i] = i+1;
@@ -73,5 +73,5 @@ int main(){
         }
     }
 
-    mtx_destroy(&mutex);
+    spn_destroy(&mutex);
 }
