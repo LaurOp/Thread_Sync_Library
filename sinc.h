@@ -56,4 +56,20 @@ void lock_for_writing(Rwlock* rwl);
 void unlock_for_writing(Rwlock* rwl);
 void rwl_destroy(Rwlock* rwl);
 
+
+//                                   MUTEX - LAMPORT ALGORITHM, N processes
+//  ===================================================================================
+
+typedef struct{
+    int thr_start;
+    volatile int* ordin;
+    volatile int* acum_alege;
+    int nrThreads;
+} NMut;
+
+void nmut_init(NMut* mut, int NrThreads);
+void nmut_lock(NMut* mut);
+void nmut_unlock(NMut* mut);
+void nmut_destroy(NMut* mut);
+
 #endif
