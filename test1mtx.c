@@ -7,22 +7,19 @@
 
 pthread_t tid[2];
 int counter;
-Mtx loc;
+Spn loc;
   
 void* trythis(void* arg)
 {
-    lock(&loc);
-  
-    unsigned long i = 0;
+    spn_lock(&loc);
+
     counter += 1;
+
     printf("Job %d has started\n", counter);
-  
-    for (i = 0; i < 100000; i++)
-        ;
   
     printf("Job %d has finished\n\n", counter);
   
-    unlock(&loc);
+    spn_unlock(&loc);
   
     return NULL;
 }
@@ -32,7 +29,7 @@ int main(void)
     int i = 0;
     int error;
   
-    mtx_init(&loc);
+    spn_init(&loc);
   
     while (i < 100) {
         error = pthread_create(&(tid[i]),
@@ -47,7 +44,7 @@ int main(void)
     for(int j = 0; j< 100;j++)
         pthread_join(tid[j], NULL);
 
-    mtx_destroy(&loc);
+    spn_destroy(&loc);
   
     return 0;
 }
