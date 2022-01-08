@@ -7,19 +7,25 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
+//                                   MUTEX
+//  ===================================================================================
+
 void mtx_init(Mtx* Mut){
     Mut->owner = 0;
 }
 
 void lock(Mtx* Mut){
-    while (!__sync_bool_compare_and_swap(&Mut->owner, 0, syscall(__NR_gettid)));
+    while (!__sync_bool_compare_and_swap(&Mut->owner, 0, syscall(__NR_gettid))){};
 }   
 
 int unlock(Mtx* Mut) {
     if (Mut->owner == 0){
+        atomic_store(&Mut->owner, 0);
         return -1;  //EROARE UNLOCK LA CEVA UNLOCKED
     }
-    if (Mut->owner != syscall(__NR_gettid) ){
+    //while (!__sync_bool_compare_and_swap(&Mut->owner, syscall(__NR_gettid), 0)){};
+    if (Mut->owner != syscall(__NR_gettid)){
+        atomic_store(&Mut->owner, 0);
         return -2;  //EROARE OWNERSHIP
     }
     atomic_store(&Mut->owner, 0);
@@ -30,6 +36,9 @@ void mtx_destroy(Mtx* Mut){
 }
 
 
+
+//                                  SEMAFOR BINAR
+//  ====================================================================================
 
 void sem_binar_init(Sem_binar* sb){
     atomic_flag_clear(&sb->flg);
@@ -48,6 +57,9 @@ void sem_binar_destroy(Sem_binar* sb){
 }
 
 
+
+//                                     RWLOCK
+//  ====================================================================================
 
 void rwl_init(Rwlock* rwl){
     rwl->counter = 0;
