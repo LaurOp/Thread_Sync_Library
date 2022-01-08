@@ -1,7 +1,9 @@
 #ifndef SINC_H_
 #define SINC_H_
 #include <stdatomic.h>
-
+//#include <pthread.h>  //pt debug
+//                                   MUTEX - SPINLOCK
+//  ===================================================================================
 typedef struct{
     volatile _Atomic int owner;
 } Mtx;
@@ -11,6 +13,10 @@ void lock(Mtx* Mut);
 int unlock(Mtx* Mut);
 void mtx_destroy(Mtx* Mut);
 
+
+
+//                                  SEMAFOR BINAR
+//  ====================================================================================
 typedef struct{
     volatile atomic_flag flg;
 } Sem_binar;        //UN MUTEX CARE NU VERIFICA OWNERSHIP
@@ -20,6 +26,10 @@ void lock_sb(Sem_binar* sb);
 int unlock_sb(Sem_binar* sb);
 void sem_binar_destroy(Sem_binar* sb);
 
+
+
+//                                     RWLOCK
+//  ====================================================================================
 
 typedef struct{
     Mtx write_lock;
