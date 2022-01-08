@@ -10,7 +10,7 @@ Rwlock rwl;
 
 void* readt(){
     lock_for_reading(&rwl);
-    printf("Din thread de read %d, iar counter-ul este %d\n", nr, rwl.counter);
+    printf("READ %d,counter %d\n", nr, rwl.counter);
     unlock_for_reading(&rwl);
 
     return NULL;
@@ -19,13 +19,13 @@ void* readt(){
 void* writet(){
     lock_for_writing(&rwl);
     nr ++;
-    printf("Din thread de write %d, iar counter-ul este %d\n", nr, rwl.counter);
+    printf("WRITE %d,counter %d\n", nr, rwl.counter);
     unlock_for_writing(&rwl);
 
     return NULL;
 }
 
-#define NR_THREADS 50
+#define NR_THREADS 30000    //maxim 32000 ca moare de la segmentation fault
 int main()
 {
     pthread_t threads[NR_THREADS];
@@ -41,6 +41,6 @@ int main()
     for(int i = 0; i < NR_THREADS; i++){
         pthread_join(threads[i],NULL);
     }
-
+    printf("\nnr:%d  counter: %d",nr,rwl.counter);
     return 0;
 }
