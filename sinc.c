@@ -7,18 +7,18 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-//                                   MUTEX
+//                                   SPINLOCK
 //  ===================================================================================
 
-void mtx_init(Mtx* Mut){
+void spn_init(Spn* Mut){
     Mut->owner = 0;
 }
 
-void lock(Mtx* Mut){
+void spn_lock(Spn* Mut){
     while (!__sync_bool_compare_and_swap(&Mut->owner, 0, syscall(__NR_gettid))){};
 }   
 
-int unlock(Mtx* Mut) {
+int spn_unlock(Spn* Mut) {
     if (Mut->owner == 0){
         atomic_store(&Mut->owner, 0);
         return -1;  //EROARE UNLOCK LA CEVA UNLOCKED
@@ -32,7 +32,12 @@ int unlock(Mtx* Mut) {
     return 0;
 }
 
-void mtx_destroy(Mtx* Mut){
+int spn_destroy(Spn* Mut){
+    if (Mut->owner){
+        printf("eroare in destroyer");
+        return -1;
+    }
+    return 0;
 }
 
 
@@ -65,7 +70,7 @@ void rwl_init(Rwlock* rwl)
 {
     rwl->counter = 0;
     sem_binar_init(&rwl->counter_lock);
-    mtx_init(&rwl->write_lock);
+    spn_init(&rwl->write_lock);
 }
 
 void lock_for_reading(Rwlock* rwl)
@@ -73,7 +78,7 @@ void lock_for_reading(Rwlock* rwl)
     lock_sb(&rwl->counter_lock);
     rwl->counter++;
     if(rwl->counter == 1)
-        lock(&rwl->write_lock);
+        spn_lock(&rwl->write_lock);
     unlock_sb(&rwl->counter_lock);
 }
 
@@ -82,22 +87,29 @@ void unlock_for_reading(Rwlock* rwl)
     lock_sb(&rwl->counter_lock);
     rwl->counter--;
     if(rwl->counter == 0)
-        unlock(&rwl->write_lock);
+        spn_unlock(&rwl->write_lock);
     unlock_sb(&rwl->counter_lock);
 }
 
 void lock_for_writing(Rwlock* rwl)
 {
-    lock(&rwl->write_lock);
+    spn_lock(&rwl->write_lock);
 }
 
 void unlock_for_writing(Rwlock* rwl)
 {   
-    unlock(&rwl->write_lock);
+    spn_unlock(&rwl->write_lock);
 }
 
 void rwl_destroy(Rwlock* rwl)
 {
     sem_binar_destroy(&rwl->counter_lock);
-    mtx_destroy(&rwl->write_lock);
+    spn_destroy(&rwl->write_lock);
 }
+
+
+
+//                                    SEMAFOR
+//  ====================================================================================
+
+
