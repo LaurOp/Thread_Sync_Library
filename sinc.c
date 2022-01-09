@@ -202,3 +202,49 @@ int s_getvalue(int* dest, Semafor* s){
 void s_destroy(Semafor* s){
     nmut_destroy(&s->mtx);
 }
+
+
+//                                    BARIERA
+//  ====================================================================================
+
+
+
+void _bar_init(Bariera* bar, int n){     // cu 100 threaduri
+    bar->ajunse = 0;
+    bar->go = 0;
+    _s_init(&bar->semaphore, 1);
+    _nmut_init(&bar->mutex);
+    bar->nrThr = n;
+}
+
+void bar_init(Bariera* bar,int n, int nrThre){       // cu nr de threaduri maxim specificat
+    bar->ajunse = 0;
+    bar->go = 0;
+    s_init(&bar->semaphore, 1, nrThre);
+    nmut_init(&bar->mutex, nrThre);
+    bar->nrThr = n;
+}
+
+void bar_point(Bariera* bar){   //a ajuns la bariera
+    nmut_lock(&bar->mutex);
+    if (bar->ajunse == 0)    //coboara bariera cand se ajunge la 0 la coada
+        s_wait(&bar->semaphore);
+    bar->ajunse++;
+    nmut_unlock(&bar->mutex);
+    if(bar->ajunse == bar->nrThr){   //ridica bariera cand se ajunge la nr bun
+        bar->ajunse = 0;
+        s_post(&bar->semaphore);
+    }
+    else{
+        int val;
+        s_getvalue(&val, &bar->semaphore);
+        while(!val)
+            s_getvalue(&val, &bar->semaphore);  //invarte-te pana se elibereaza bariera
+    }
+
+}
+
+void bar_destroy(Bariera* bar){
+    nmut_destroy(&bar->mutex);
+    s_destroy(&bar->semaphore);
+}
