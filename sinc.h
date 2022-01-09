@@ -2,7 +2,7 @@
 #define SINC_H_
 #include <stdatomic.h>
 #include <pthread.h>  //pt debug
-//                                   MUTEX - SPINLOCK
+//                                   SPINLOCK cu ownership
 //  ===================================================================================
 typedef struct{
     volatile _Atomic int owner;
@@ -19,26 +19,12 @@ int spn_destroy(Spn* Mut);
 //  ====================================================================================
 typedef struct{
     volatile atomic_flag flg;
-} Sem_binar;        //UN MUTEX CARE NU VERIFICA OWNERSHIP
+} Sem_binar;
 
 void sem_binar_init(Sem_binar* sb);
 void lock_sb(Sem_binar* sb);
 int unlock_sb(Sem_binar* sb);
 void sem_binar_destroy(Sem_binar* sb);
-
-//                                    SEMAFOR
-//  ====================================================================================
-
-typedef struct{
-
-} Semafor;
-
-void s_init(Semafor* s, int v);
-void s_wait(Semafor* s);
-void s_post(Semafor* s);
-void s_getvalue(int* dest, Semafor* s);
-void s_destroy(Semafor* s);
-
 
 //                                     RWLOCK
 //  ====================================================================================
@@ -68,8 +54,28 @@ typedef struct{
 } NMut;
 
 void nmut_init(NMut* mut, int NrThreads);
+void _nmut_init(NMut* mut);
 void nmut_lock(NMut* mut);
 void nmut_unlock(NMut* mut);
 void nmut_destroy(NMut* mut);
+
+
+
+//                                    SEMAFOR
+//  ====================================================================================
+
+typedef struct{
+    int size;
+    _Atomic int count;
+    NMut mtx;
+} Semafor;
+
+void _s_init(Semafor* s, int val);
+void s_init(Semafor* s, int val, int nrthr);
+void s_wait(Semafor* s);
+void s_post(Semafor* s);
+int s_getvalue(int* dest, Semafor* s);
+void s_destroy(Semafor* s);
+
 
 #endif
