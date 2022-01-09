@@ -7,7 +7,7 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-//                                   SPINLOCK
+//                                   SPINLOCK cu ownership
 //  ===================================================================================
 
 void spn_init(Spn* Mut){
@@ -108,12 +108,7 @@ void rwl_destroy(Rwlock* rwl)
 }
 
 
-
-//                                    SEMAFOR
-//  ====================================================================================
-
-
-//                                   MUTEX - LAMPORT ALGORITHM, N Threads
+//                          MUTEX - LAMPORT ALGORITHM, N Threads
 //  ===================================================================================
 
 void nmut_init(NMut* mut, int NrThreads){
@@ -121,6 +116,13 @@ void nmut_init(NMut* mut, int NrThreads){
     mut->ordin = malloc(NrThreads*sizeof(int));
     mut->acum_alege = malloc(NrThreads*sizeof(int));
     mut->nrThreads = NrThreads;
+}
+
+void _nmut_init(NMut* mut){
+    mut->thr_start = syscall(__NR_gettid);
+    mut->ordin = malloc(100*sizeof(int));
+    mut->acum_alege = malloc(100*sizeof(int));
+    mut->nrThreads = 100;
 }
 
 void nmut_lock(NMut* mut){
@@ -151,4 +153,52 @@ void nmut_destroy(NMut* mut){
     free(mut->ordin);
     free(mut->acum_alege);
 }
-  
+ 
+
+
+//                                    SEMAFOR
+//  ====================================================================================
+
+ 
+void _s_init(Semafor* s, int val){
+    s->size = val;
+    s->count = 0;
+    _nmut_init(&s->mtx);
+}
+
+void s_init(Semafor* s, int val, int nrthr){
+    s->size = val;
+    s->count = 0;
+    nmut_init(&s->mtx, nrthr);
+}
+
+void s_wait(Semafor* s){
+    while(1){
+        while (atomic_load(&s->count) >= s->size) {}
+        nmut_lock(&s->mtx);
+        if (s->count >= s->size) {
+            nmut_unlock(&s->mtx);
+            continue;
+        }
+        s->count++;
+        nmut_unlock(&s->mtx);
+        break;
+    }
+}
+
+void s_post(Semafor* s){
+    nmut_lock(&s->mtx);
+    if (s->count > 0)
+        s->count--;
+    nmut_unlock(&s->mtx);
+}
+
+int s_getvalue(int* dest, Semafor* s){
+    nmut_lock(&s->mtx);
+    *dest = s->size - s->count;
+    nmut_unlock(&s->mtx);
+}
+
+void s_destroy(Semafor* s){
+    nmut_destroy(&s->mtx);
+}
