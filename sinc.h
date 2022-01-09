@@ -53,8 +53,8 @@ typedef struct{
     int nrThreads;
 } NMut;
 
-void nmut_init(NMut* mut, int NrThreads);
 void _nmut_init(NMut* mut);
+void nmut_init(NMut* mut, int NrThreads);
 void nmut_lock(NMut* mut);
 void nmut_unlock(NMut* mut);
 void nmut_destroy(NMut* mut);
@@ -77,5 +77,20 @@ void s_post(Semafor* s);
 int s_getvalue(int* dest, Semafor* s);
 void s_destroy(Semafor* s);
 
+
+//                                    BARIERA
+//  ====================================================================================
+
+typedef struct{
+    int nrThr;
+    NMut mutex;
+    Semafor semaphore;
+    int ajunse, go;
+} Bariera;
+
+void _bar_init(Bariera* bar, int n);
+void bar_init(Bariera* bar,int n, int nrThre);
+void bar_point(Bariera* bar);
+void bar_destroy(Bariera* bar);
 
 #endif
