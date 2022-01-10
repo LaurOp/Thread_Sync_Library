@@ -7,7 +7,7 @@
 #include <sys/syscall.h> 
 #include "sinc.h"
 
-#define NR_THREADS 100
+#define NR_THREADS 500
 volatile int resource = 0;
 
 NMut m;
@@ -17,12 +17,12 @@ void* thread_body(void* arg)
     long thread = (long)arg;
     nmut_lock(&m);
     if (resource != 0) {
-        printf("Resource was acquired by %d, but is still in-use by %d!\n",
+        printf("luat de %d, dar are owner %d!\n",
                thread, resource);
     }
   
     resource = thread;
-    printf("%d using resource...\n", thread);
+    printf("%d a luat resursa\n", thread);
   
     resource = 0;
     nmut_unlock(&m);
