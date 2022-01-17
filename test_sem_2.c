@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "sinc.h"
 
-#define nMAX 315153
+#define nMAX 1152
 
 Semafor s;
 int nr = 0;
