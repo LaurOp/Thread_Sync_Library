@@ -2,3 +2,4 @@ Lockers – Implementati propria biblioteca care sa ofere obiecte de sincronizar
 pthread. Pentru implementare puteti folosi doar primitive atomice precum compare-and-swap.
 
 proiect realizat la 04.01.2022 - 09.01.2022
+in echipa cu @andreicosmin55 si @alexandravoinea01
